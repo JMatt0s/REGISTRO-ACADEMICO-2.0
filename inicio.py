@@ -1,3 +1,4 @@
+import re
 import subprocess
 import sys
 import tkinter as tk
@@ -9,7 +10,12 @@ DIRECTORIO = Path(__file__).resolve().parent
 APLICACION = DIRECTORIO / "ren_4_men.py"
 
 
-def abrir_sistema():
+def autenticar_cedula(cedula: str) -> bool:
+    cedula = cedula.strip()
+    return bool(re.fullmatch(r"[0-9]{10}", cedula))
+
+
+def abrir_sistema(ventana: tk.Tk) -> None:
     if not APLICACION.is_file():
         messagebox.showerror(
             "Archivo no encontrado",
@@ -28,43 +34,64 @@ def abrir_sistema():
         )
 
 
-ventana = tk.Tk()
-ventana.title("Sistema Multifacultad")
-ventana.geometry("560x360")
-ventana.minsize(480, 320)
-ventana.configure(background="#eef3f8")
+def crear_ventana() -> tk.Tk:
+    ventana = tk.Tk()
+    ventana.title("Inicio de sesión - Sistema Multifacultad")
+    ventana.geometry("560x360")
+    ventana.minsize(480, 320)
+    ventana.configure(background="#eef3f8")
 
-estilo = ttk.Style(ventana)
-estilo.configure("Titulo.TLabel", font=("Segoe UI", 22, "bold"))
-estilo.configure("Descripcion.TLabel", font=("Segoe UI", 11))
-estilo.configure("Abrir.TButton", font=("Segoe UI", 12, "bold"), padding=(18, 12))
+    estilo = ttk.Style(ventana)
+    estilo.configure("Titulo.TLabel", font=("Segoe UI", 22, "bold"))
+    estilo.configure("Descripcion.TLabel", font=("Segoe UI", 11))
+    estilo.configure("Abrir.TButton", font=("Segoe UI", 12, "bold"), padding=(18, 12))
 
-contenido = ttk.Frame(ventana, padding=36)
-contenido.pack(expand=True, fill="both")
+    contenido = ttk.Frame(ventana, padding=36)
+    contenido.pack(expand=True, fill="both")
 
-ttk.Label(
-    contenido,
-    text="Sistema Multifacultad",
-    style="Titulo.TLabel",
-).pack(pady=(24, 10))
+    ttk.Label(
+        contenido,
+        text="Sistema Multifacultad",
+        style="Titulo.TLabel",
+    ).pack(pady=(24, 10))
 
-ttk.Label(
-    contenido,
-    text="Gestión académica y consulta de estudiantes",
-    style="Descripcion.TLabel",
-).pack(pady=(0, 28))
+    ttk.Label(
+        contenido,
+        text="Inicia sesión con tu cédula",
+        style="Descripcion.TLabel",
+    ).pack(pady=(0, 18))
 
-ttk.Button(
-    contenido,
-    text="Abrir sistema académico",
-    style="Abrir.TButton",
-    command=abrir_sistema, 
-).pack()
+    entrada_cedula = ttk.Entry(contenido, font=("Segoe UI", 12), justify="center")
+    entrada_cedula.pack(fill="x", padx=35, ipady=6)
+    entrada_cedula.focus_set()
 
-ttk.Button(
-    contenido,
-    text="Salir",
-    command=ventana.destroy,
-).pack(pady=18)
+    def iniciar_sesion() -> None:
+        cedula = entrada_cedula.get().strip()
+        if not autenticar_cedula(cedula):
+            messagebox.showwarning(
+                "Cédula inválida",
+                "Ingresa una cédula válida de 10 dígitos.",
+                parent=ventana,
+            )
+            entrada_cedula.focus_set()
+            return
 
-ventana.mainloop()
+        abrir_sistema(ventana)
+
+    ttk.Button(
+        contenido,
+        text="Iniciar sesión",
+        style="Abrir.TButton",
+        command=iniciar_sesion,
+    ).pack(pady=18)
+    ttk.Button(
+        contenido,
+        text="Salir",
+        command=ventana.destroy,
+    ).pack()
+
+    return ventana
+
+
+if __name__ == "__main__":
+    crear_ventana().mainloop()
